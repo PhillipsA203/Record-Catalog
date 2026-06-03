@@ -1,0 +1,4007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Stacks of A203 — Record Catalog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Hanken+Grotesque:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     THEME — change these colors to re-skin the whole catalog
+     ============================================================ */
+  :root{
+    --paper:#f4ece0;
+    --paper-2:#ece1d0;
+    --ink:#1c1714;
+    --ink-soft:#5a4f45;
+    --accent:#b5431f;      /* burnt orange — also the "hit song" color */
+    --accent-2:#3b5d52;    /* muted green  */
+    --line:#d8cbb6;
+    --card:#fbf6ee;
+    --shadow:rgba(40,28,18,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    background-image:
+      /* faint vinyl grooves arcing in from the top-left */
+      repeating-radial-gradient(circle at -6% -10%, rgba(28,23,20,.055) 0 1px, transparent 1px 13px),
+      /* faint vinyl grooves arcing in from the bottom-right */
+      repeating-radial-gradient(circle at 106% 112%, rgba(28,23,20,.05) 0 1px, transparent 1px 15px),
+      /* warm accent glows */
+      radial-gradient(circle at 14% 16%, rgba(181,67,31,.08), transparent 44%),
+      radial-gradient(circle at 86% 6%, rgba(59,93,82,.09), transparent 42%),
+      /* ledger / graph-paper grid (classroom + business feel) */
+      linear-gradient(rgba(28,23,20,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(28,23,20,.04) 1px, transparent 1px);
+    background-size:auto,auto,auto,auto,36px 36px,36px 36px;
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:"Hanken Grotesque",sans-serif;
+    line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased;
+  }
+  /* ---------- Header ---------- */
+  header{
+    padding:48px 24px 28px;text-align:center;border-bottom:2px solid var(--ink);
+    position:relative;overflow:hidden;
+  }
+  header::after{
+    content:"";position:absolute;right:-70px;top:50%;transform:translateY(-50%);
+    width:260px;height:260px;border-radius:50%;pointer-events:none;opacity:.45;
+    background:
+      radial-gradient(circle, var(--accent) 0 6%, rgba(28,23,20,.55) 6.5% 8.5%, transparent 9%),
+      repeating-radial-gradient(circle, rgba(28,23,20,.10) 0 1.5px, transparent 1.5px 8px);
+  }
+  @media(max-width:760px){header::after{display:none}}
+  .kicker{font-size:.78rem;letter-spacing:.42em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:10px}
+  h1{font-family:"Fraunces",serif;font-weight:900;font-size:clamp(2.6rem,7vw,5rem);line-height:.95;letter-spacing:-.02em}
+  .sub{margin-top:14px;color:var(--ink-soft);font-size:1.02rem;max-width:560px;margin-left:auto;margin-right:auto}
+  .count-badge{display:inline-block;margin-top:16px;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;
+    background:var(--ink);color:var(--paper);padding:5px 14px;border-radius:100px;font-weight:600}
+  /* ---------- Controls ---------- */
+  .controls{position:sticky;top:0;z-index:50;background:rgba(244,236,224,.92);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);padding:16px 24px;}
+  .controls-inner{max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+  .search{flex:1;min-width:220px;position:relative}
+  .search input{width:100%;padding:12px 16px 12px 42px;border:1.5px solid var(--line);border-radius:100px;
+    background:var(--card);font-family:inherit;font-size:.96rem;color:var(--ink);transition:border-color .15s}
+  .search input:focus{outline:none;border-color:var(--accent)}
+  .search svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:17px;height:17px;stroke:var(--ink-soft)}
+  select{padding:11px 36px 11px 16px;border:1.5px solid var(--line);border-radius:100px;background:var(--card);
+    font-family:inherit;font-size:.9rem;color:var(--ink);cursor:pointer;-webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235a4f45' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 14px center}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;max-width:1180px;margin:0 auto;padding:0 24px 16px}
+  .chip{padding:6px 14px;border:1.5px solid var(--line);border-radius:100px;background:transparent;cursor:pointer;
+    font-family:inherit;font-size:.82rem;font-weight:600;color:var(--ink-soft);transition:all .14s;white-space:nowrap}
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  .chip.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  /* ---------- Grid ---------- */
+  .grid{max-width:1180px;margin:0 auto;padding:30px 24px 80px;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:30px 24px}
+  .card{cursor:pointer;animation:rise .5s both}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .sleeve{position:relative;aspect-ratio:1;border-radius:4px;overflow:hidden;
+    box-shadow:0 6px 20px var(--shadow);transition:transform .22s ease,box-shadow .22s ease}
+  .card:hover .sleeve{transform:translateY(-6px) rotate(-.6deg);box-shadow:0 16px 34px var(--shadow)}
+  .sleeve img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2}
+  /* CSS placeholder cover (used when no image is provided) */
+  .placeholder{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;
+    padding:16px;color:#fff}
+  .placeholder::before{content:"";position:absolute;right:-32%;top:50%;transform:translateY(-50%);
+    width:78%;aspect-ratio:1;border-radius:50%;
+    background:radial-gradient(circle,#000 14%,rgba(0,0,0,.55) 15% 18%,transparent 19%),
+      repeating-radial-gradient(circle,rgba(255,255,255,.10) 0 1px,transparent 1px 4px);opacity:.5}
+  .placeholder .pt{font-family:"Fraunces",serif;font-weight:900;font-size:1.18rem;line-height:1.04;
+    position:relative;z-index:1;text-shadow:0 1px 3px rgba(0,0,0,.35);max-width:88%}
+  .placeholder .pa{font-size:.74rem;font-weight:600;letter-spacing:.04em;opacity:.9;position:relative;z-index:1;text-transform:uppercase}
+  .card-meta{padding:12px 2px 0}
+  .card-title{font-family:"Fraunces",serif;font-weight:600;font-size:1.04rem;line-height:1.12}
+  .card-artist{color:var(--ink-soft);font-size:.9rem;margin-top:2px}
+  .card-tags{font-size:.74rem;color:var(--accent);margin-top:6px;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+  .empty{grid-column:1/-1;text-align:center;color:var(--ink-soft);padding:60px 0;font-size:1.05rem}
+  /* ---------- Modal ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(28,23,20,.55);backdrop-filter:blur(4px);z-index:100;
+    display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+  .overlay.open{display:flex}
+  .modal{background:var(--card);border-radius:10px;max-width:760px;width:100%;overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,.4);animation:pop .26s cubic-bezier(.2,.8,.3,1) both}
+  @keyframes pop{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:none}}
+  .modal-top{display:flex;gap:24px;padding:28px;border-bottom:1px solid var(--line);position:relative}
+  .modal-sleeve{width:160px;flex-shrink:0;aspect-ratio:1;border-radius:5px;overflow:hidden;
+    box-shadow:0 8px 22px var(--shadow);position:relative}
+  .modal-sleeve img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2}
+  .modal-info{flex:1;min-width:0}
+  .modal-info h2{font-family:"Fraunces",serif;font-weight:900;font-size:1.7rem;line-height:1.04}
+  .modal-info .ma{color:var(--accent);font-weight:700;font-size:1.05rem;margin-top:3px}
+  .modal-info .meta{color:var(--ink-soft);font-size:.86rem;margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 14px}
+  .modal-info .blurb{margin-top:14px;font-size:.92rem;color:var(--ink);line-height:1.5}
+  .close{position:absolute;top:16px;right:18px;width:34px;height:34px;border:none;border-radius:50%;
+    background:var(--paper-2);cursor:pointer;font-size:1.3rem;line-height:1;color:var(--ink);transition:background .15s}
+  .close:hover{background:var(--accent);color:#fff}
+  .tracks{padding:22px 28px 30px}
+  .side-block{margin-bottom:18px}
+  .side-label{font-size:.74rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);
+    font-weight:700;margin-bottom:8px;border-bottom:1px dashed var(--line);padding-bottom:5px}
+  .trk{display:flex;align-items:baseline;gap:10px;padding:5px 0;font-size:.96rem}
+  .trk .n{color:var(--ink-soft);font-size:.8rem;min-width:18px;font-variant-numeric:tabular-nums}
+  .trk.hit .t{color:var(--accent);font-weight:600}
+  .trk .star{color:var(--accent);font-size:.8rem}
+  .legend{font-size:.78rem;color:var(--ink-soft);padding:0 28px 24px;display:flex;align-items:center;gap:7px}
+  .legend .star{color:var(--accent)}
+  footer{text-align:center;padding:30px 24px 50px;border-top:2px solid var(--ink);color:var(--ink-soft);font-size:.86rem}
+  footer b{color:var(--ink)}
+  @media(max-width:560px){
+    .modal-top{flex-direction:column}.modal-sleeve{width:120px}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:24px 16px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">Vinyl Archive</div>
+  <h1>The Stacks of A203</h1>
+  <p class="sub">Browse through the available records and enjoy. Search, filter by genre, and click any sleeve to see the full tracklist — hit songs marked in orange.</p>
+  <div class="count-badge" id="countBadge">— records</div>
+</header>
+
+<div class="controls">
+  <div class="controls-inner">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="search" type="text" placeholder="Search album, artist, or song…" />
+    </div>
+    <select id="sort">
+      <option value="artist">Sort: Artist (A–Z)</option>
+      <option value="title">Sort: Album title</option>
+      <option value="year-new">Sort: Year (newest)</option>
+      <option value="year-old">Sort: Year (oldest)</option>
+      <option value="added">Sort: Recently added</option>
+    </select>
+  </div>
+</div>
+<div class="chips" id="chips"></div>
+
+<main class="grid" id="grid"></main>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<footer>
+  <p><b>The Stacks of A203</b> — built from a spreadsheet of real vinyl pressings.</p>
+  <p style="margin-top:6px">To add records or cover art, open this file in a text editor and edit the <b>ALBUMS</b> list near the top of the script. Instructions are in the comments.</p>
+</footer>
+
+<script>
+/* ============================================================================
+   ⬇⬇⬇  YOUR RECORD COLLECTION  ⬇⬇⬇
+   This is the ONLY part you need to edit. Everything below the "APP CODE"
+   line further down runs the site — you can leave it alone.
+
+   ── HOW TO ADD A NEW ALBUM ──────────────────────────────────────────────
+   Copy one whole block between the { curly braces } (including the comma),
+   paste it at the end of the list (before the closing ]) and fill it in:
+
+     {
+       "title": "Album Name",
+       "artist": "Artist Name",
+       "year": 1975,
+       "genre": "Rock",                 // becomes a filter button automatically
+       "label": "Columbia",
+       "color": "#3a3a3a",              // sleeve background if there's no image
+       "cover": "",                      // see "HOW TO ADD COVER ART" below
+       "blurb": "One or two sentences about the album.",
+       "tracks": [
+         { "side": "A", "name": "First Song", "hit": true },
+         { "side": "A", "name": "Second Song", "hit": false },
+         { "side": "B", "name": "Another Song", "hit": false }
+       ]
+     },
+
+   • "hit": true  → song is highlighted in orange with a ★ (use for singles/standouts)
+   • "side" can be "A", "B", "C", "D"… for double albums.
+   • Keep the commas between items. Every text value needs "double quotes".
+
+   ── HOW TO ADD COVER ART ────────────────────────────────────────────────
+   Two ways to fill the "cover" field:
+   1) Put image files in a folder named "covers" next to this HTML file, then
+      write the path, e.g.   "cover": "covers/abbey-road.jpg"
+   2) Or paste a direct image link, e.g.  "cover": "https://example.com/art.jpg"
+   Square images look best. If "cover" is left as "" the colored sleeve shows
+   instead — so the catalog always looks complete.
+
+   ── RE-SKIN THE COLORS ──────────────────────────────────────────────────
+   Edit the variables in the :root section of the <style> block up top.
+   ============================================================================ */
+
+const ALBUMS = [
+  {
+    "title": "Boxer",
+    "artist": "The National",
+    "year": 2007,
+    "genre": "Indie Rock",
+    "label": "Beggars Banquet",
+    "color": "#2e3a44",
+    "cover": "",
+    "blurb": "The Brooklyn band's breakthrough fourth album, built on restless drumming and Matt Berninger's baritone.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Fake Empire",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Mistaken for Strangers",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Brainy",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Squalor Victoria",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Green Gloves",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Slow Show",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Apartment Story",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Start a War",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Guest Room",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Racing Like a Pro",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Ada",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Gospel",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "AM",
+    "artist": "Arctic Monkeys",
+    "year": 2013,
+    "genre": "Alternative Rock",
+    "label": "Domino",
+    "color": "#111111",
+    "cover": "",
+    "blurb": "The Sheffield band's sleek, R&B-tinged fifth album that turned them into a global act.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Do I Wanna Know?",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "R U Mine?",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "One for the Road",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Arabella",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "I Want It All",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "No. 1 Party Anthem",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Mad Sounds",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Fireside",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Why'd You Only Call Me When You're High?",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Snap Out of It",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Knee Socks",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "I Wanna Be Yours",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "The Stranger",
+    "artist": "Billy Joel",
+    "year": 1977,
+    "genre": "Pop Rock",
+    "label": "Columbia",
+    "color": "#b9a07a",
+    "cover": "",
+    "blurb": "Joel's commercial breakthrough, produced by Phil Ramone. (Original vinyl ends with an unlisted reprise.)",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Movin' Out (Anthony's Song)",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "The Stranger",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Just the Way You Are",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Scenes from an Italian Restaurant",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Vienna",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Only the Good Die Young",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "She's Always a Woman",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Get It Right the First Time",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Everybody Has a Dream",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "The Stranger (Reprise)",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Chicago Transit Authority",
+    "artist": "Chicago Transit Authority",
+    "year": 1969,
+    "genre": "Jazz Rock",
+    "label": "Columbia",
+    "color": "#3a4a3f",
+    "cover": "",
+    "blurb": "Ambitious 1969 debut double album mixing horn-driven singles with long jams. (Original band name.)",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Introduction",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Does Anybody Really Know What Time It Is?",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Beginnings",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Questions 67 and 68",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Listen",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Poem 58",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Free Form Guitar",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "South California Purples",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "I'm a Man",
+        "hit": true
+      },
+      {
+        "side": "D",
+        "name": "Prologue, August 29, 1968",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Someday (August 29, 1968)",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Liberation",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Astral Weeks",
+    "artist": "Van Morrison",
+    "year": 1968,
+    "genre": "Folk Rock",
+    "label": "Warner Bros.",
+    "color": "#4a3a63",
+    "cover": "",
+    "blurb": "Morrison's free-flowing second album; its sides were originally subtitled 'In the Beginning' and 'Afterwards'.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Astral Weeks",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Beside You",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Sweet Thing",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Cyprus Avenue",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "The Way Young Lovers Do",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Madame George",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Ballerina",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Slim Slow Slider",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "...Like Clockwork",
+    "artist": "Queens of the Stone Age",
+    "year": 2013,
+    "genre": "Hard Rock",
+    "label": "Matador",
+    "color": "#7a1f1f",
+    "cover": "",
+    "blurb": "QOTSA's dark comeback sixth album, their first to top the US chart.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Keep Your Eyes Peeled",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "I Sat by the Ocean",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "The Vampyre of Time and Memory",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "If I Had a Tail",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "My God Is the Sun",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Kalopsia",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Fairweather Friends",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Smooth Sailing",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "I Appear Missing",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "...Like Clockwork",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Sublime",
+    "artist": "Sublime",
+    "year": 1996,
+    "genre": "Ska Punk",
+    "label": "MCA",
+    "color": "#c25a1f",
+    "cover": "",
+    "blurb": "The band's self-titled final album, released two months after Bradley Nowell's death; a genre-hopping double LP.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Garden Grove",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "What I Got",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Wrong Way",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Same in the End",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "April 29, 1992 (Miami)",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Santeria",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Seed",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Jailhouse",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Pawn Shop",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Paddle Out",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "The Ballad of Johnny Butt",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Burritos",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Under My Voodoo",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Get Ready",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Caress Me Down",
+        "hit": true
+      },
+      {
+        "side": "D",
+        "name": "What I Got (Reprise)",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Doin' Time",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "Live on Red Barn Radio I & II",
+    "artist": "Tyler Childers",
+    "year": 2018,
+    "genre": "Country",
+    "label": "Hickman Holler",
+    "color": "#6e2b1f",
+    "cover": "",
+    "blurb": "Two 2013 live radio sessions in Lexington, KY, collected on one LP in 2018.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Shake the Frost",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Deadman's Curve",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Charleston Girl",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Whitehouse Road",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Rock Salt and Nails",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Coming Down",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Follow You to Virgie",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Bottles and Bibles",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "John Barleycorn Must Die",
+    "artist": "Traffic",
+    "year": 1970,
+    "genre": "Rock",
+    "label": "Island / United Artists",
+    "color": "#7a5a1f",
+    "cover": "",
+    "blurb": "Traffic's comeback fourth album, blending rock, jazz, and an old English folk ballad.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Glad",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Freedom Rider",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Empty Pages",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Stranger to Himself",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "John Barleycorn (Must Die)",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Every Mother's Son",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Ten",
+    "artist": "Pearl Jam",
+    "year": 1991,
+    "genre": "Grunge",
+    "label": "Epic",
+    "color": "#2f3b52",
+    "cover": "",
+    "blurb": "Pearl Jam's debut, a defining record of the grunge era and an eventual multi-platinum landmark.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Once",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Even Flow",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Alive",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Why Go",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Black",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Jeremy",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Oceans",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Porch",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Garden",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Deep",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Release",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Kind of Blue",
+    "artist": "Miles Davis",
+    "year": 1959,
+    "genre": "Jazz",
+    "label": "Columbia",
+    "color": "#1b3a5c",
+    "cover": "",
+    "blurb": "The best-selling jazz album of all time, recorded in two near-improvised modal sessions.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "So What",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Freddie Freeloader",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Blue in Green",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "All Blues",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Flamenco Sketches",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Harry Styles",
+    "artist": "Harry Styles",
+    "year": 2017,
+    "genre": "Pop Rock",
+    "label": "Columbia",
+    "color": "#b5707a",
+    "cover": "",
+    "blurb": "Styles's classic-rock-leaning solo debut, led by the chart-topping single Sign of the Times.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Meet Me in the Hallway",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Sign of the Times",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Carolina",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Two Ghosts",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Sweet Creature",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Only Angel",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Kiwi",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Ever Since New York",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Woman",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "From the Dining Table",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Automatic for the People",
+    "artist": "R.E.M.",
+    "year": 1992,
+    "genre": "Alternative Rock",
+    "label": "Warner Bros.",
+    "color": "#2a2f3a",
+    "cover": "",
+    "blurb": "R.E.M.'s somber, string-laden eighth album, widely considered their masterpiece.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Drive",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Try Not to Breathe",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "The Sidewinder Sleeps Tonite",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Everybody Hurts",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "New Orleans Instrumental No. 1",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Sweetness Follows",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Monty Got a Raw Deal",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Ignoreland",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Star Me Kitten",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Man on the Moon",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Nightswimming",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Find the River",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Pet Sounds",
+    "artist": "The Beach Boys",
+    "year": 1966,
+    "genre": "Pop",
+    "label": "Capitol",
+    "color": "#6e7d4a",
+    "cover": "",
+    "blurb": "Brian Wilson's orchestral pop landmark. Listed here as the original mono pressing.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Wouldn't It Be Nice",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "You Still Believe in Me",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "That's Not Me",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Don't Talk (Put Your Head on My Shoulder)",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "I'm Waiting for the Day",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Let's Go Away for Awhile",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Sloop John B",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "God Only Knows",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "I Know There's an Answer",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Here Today",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "I Just Wasn't Made for These Times",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Pet Sounds",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Caroline, No",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "Fire and Water",
+    "artist": "Free",
+    "year": 1970,
+    "genre": "Hard Rock",
+    "label": "Island",
+    "color": "#6b2b2b",
+    "cover": "",
+    "blurb": "Free's breakthrough third album, home to their signature hit All Right Now.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Fire and Water",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Oh I Wept",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Remember",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Heavy Load",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Mr. Big",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Don't Say You Love Me",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "All Right Now",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "Purgatory",
+    "artist": "Tyler Childers",
+    "year": 2017,
+    "genre": "Country",
+    "label": "Hickman Holler",
+    "color": "#5a3a1f",
+    "cover": "",
+    "blurb": "Childers's breakthrough second album, produced by Sturgill Simpson and David Ferguson.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "I Swear (To God)",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Feathered Indians",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Tattoos",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Born Again",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Whitehouse Road",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Banded Clovis",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Purgatory",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Honky Tonk Flame",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Universal Sound",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Lady May",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "Starting Over",
+    "artist": "Chris Stapleton",
+    "year": 2020,
+    "genre": "Country",
+    "label": "Mercury Nashville",
+    "color": "#3a2a22",
+    "cover": "",
+    "blurb": "Stapleton's fourth album, a 14-track double LP produced with Dave Cobb.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Starting Over",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Devil Always Made Me Think Twice",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Cold",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "When I'm With You",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Arkansas",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Joy of My Life",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Hillbilly Blood",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Maggie's Song",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Whiskey Sunrise",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Worry B Gone",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Old Friends",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Watch You Burn",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "You Should Probably Leave",
+        "hit": true
+      },
+      {
+        "side": "D",
+        "name": "Nashville, TN",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Legend",
+    "artist": "Bob Marley and the Wailers",
+    "year": 1984,
+    "genre": "Reggae",
+    "label": "Island",
+    "color": "#2f6b3a",
+    "cover": "",
+    "blurb": "The best-selling reggae album ever. The original 1984 greatest-hits compilation tracklist.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Is This Love",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "No Woman No Cry (Live)",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Could You Be Loved",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Three Little Birds",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Buffalo Soldier",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Get Up, Stand Up",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Stir It Up",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "One Love / People Get Ready",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "I Shot the Sheriff",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Waiting in Vain",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Redemption Song",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Satisfy My Soul",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Exodus",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Jamming",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Aja",
+    "artist": "Steely Dan",
+    "year": 1977,
+    "genre": "Jazz Rock",
+    "label": "ABC",
+    "color": "#1f3a4a",
+    "cover": "",
+    "blurb": "Steely Dan's polished, jazz-inflected sixth album, a studio-craft high-water mark.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Black Cow",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Aja",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Deacon Blues",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Peg",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Home at Last",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "I Got the News",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Josie",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "Queens of the Stone Age",
+    "artist": "Queens of the Stone Age",
+    "year": 1998,
+    "genre": "Stoner Rock",
+    "label": "Loosegroove",
+    "color": "#a04a1f",
+    "cover": "",
+    "blurb": "The band's hypnotic debut. Listed here in its original 1998 sequence.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Regular John",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Avon",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "If Only",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Walkin on the Sidewalks",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "You Would Know",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "How to Handle a Rope (A Lesson in the Lariat)",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Mexicola",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Hispanic Impressions",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "You Can't Quit Me Baby",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Give the Mule What He Wants",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "I Was a Teenage Hand Model",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Coming Home",
+    "artist": "Leon Bridges",
+    "year": 2015,
+    "genre": "Soul",
+    "label": "Columbia",
+    "color": "#3a4a6b",
+    "cover": "",
+    "blurb": "Bridges's retro-soul debut, evoking the sound of 1960s Sam Cooke-era R&B.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Coming Home",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Better Man",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Brown Skin Girl",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Smooth Sailin'",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Shine",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Lisa Sawyer",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Flowers",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Pull Away",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Twistin' & Groovin'",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "River",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "Grace",
+    "artist": "Jeff Buckley",
+    "year": 1994,
+    "genre": "Alternative Rock",
+    "label": "Columbia",
+    "color": "#6b2535",
+    "cover": "",
+    "blurb": "Buckley's only completed studio album, celebrated for his soaring voice and the cover of Hallelujah.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Mojo Pin",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Grace",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Last Goodbye",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Lilac Wine",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "So Real",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Hallelujah",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Lover, You Should've Come Over",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Corpus Christi Carol",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Eternal Life",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Dream Brother",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Are You Experienced",
+    "artist": "The Jimi Hendrix Experience",
+    "year": 1967,
+    "genre": "Psychedelic Rock",
+    "label": "Reprise",
+    "color": "#7a3aa0",
+    "cover": "",
+    "blurb": "Hendrix's explosive debut. Listed here as the US (Reprise) edition.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Purple Haze",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Manic Depression",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Hey Joe",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Love or Confusion",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "May This Be Love",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "I Don't Live Today",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "The Wind Cries Mary",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Fire",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Third Stone from the Sun",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Foxey Lady",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Are You Experienced?",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Back to Black",
+    "artist": "Amy Winehouse",
+    "year": 2006,
+    "genre": "Soul",
+    "label": "Island",
+    "color": "#1a1a1a",
+    "cover": "",
+    "blurb": "Winehouse's second and final album, a modern soul classic produced by Mark Ronson and Salaam Remi.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Rehab",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "You Know I'm No Good",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Me & Mr Jones",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Just Friends",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Back to Black",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Love Is a Losing Game",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Tears Dry on Their Own",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Wake Up Alone",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Some Unholy War",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "He Can Only Hold Her",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Addicted",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Made by These Moments",
+    "artist": "The Red Clay Strays",
+    "year": 2024,
+    "genre": "Country Rock",
+    "label": "RCA",
+    "color": "#6b3520",
+    "cover": "",
+    "blurb": "The Alabama band's RCA debut, blending southern rock and soul, produced by Dave Cobb.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Disaster",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Wasting Time",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Wanna Be Loved",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "No One Else Like Me",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Ramblin'",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Drowning",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Devil in My Ear",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "I'm Still Fine",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "On My Knees",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Moments",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "God Does",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "The Art of Loving",
+    "artist": "Olivia Dean",
+    "year": 2025,
+    "genre": "Soul",
+    "label": "Capitol / Polydor",
+    "color": "#b5485a",
+    "cover": "",
+    "blurb": "British neo-soul star Olivia Dean's warm, love-themed second album.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "The Art of Loving (Intro)",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Nice to Each Other",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Lady Lady",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Close Up",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "So Easy (To Fall in Love)",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Let Alone the One You Love",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Man I Need",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Something In Between",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Loud",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Baby Steps",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "A Couple Minutes",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "I've Seen It",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Currents",
+    "artist": "Tame Impala",
+    "year": 2015,
+    "genre": "Psychedelic Pop",
+    "label": "Interscope",
+    "color": "#c2461f",
+    "cover": "",
+    "blurb": "Kevin Parker's synth-driven third album about personal transformation; a modern psych-pop landmark. Double LP.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Let It Happen",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Nangs",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "The Moment",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Yes I'm Changing",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Eventually",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Gossip",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "The Less I Know the Better",
+        "hit": true
+      },
+      {
+        "side": "C",
+        "name": "Past Life",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Disciples",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "'Cause I'm a Man",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Reality in Motion",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Love/Paranoia",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "New Person, Same Old Mistakes",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "Deadbeat",
+    "artist": "Tame Impala",
+    "year": 2025,
+    "genre": "Electronic",
+    "label": "Columbia",
+    "color": "#3a2f5a",
+    "cover": "",
+    "blurb": "Tame Impala's fifth album, leaning into dance and electronic textures.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "My Old Ways",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "No Reply",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Dracula",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Loser",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Oblivion",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Not My World",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Piece of Heaven",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Obsolete",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Ethereal Connection",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "See You on Monday (You're Lost)",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Afterthought",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "End of Summer",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "The Rise and Fall of Ziggy Stardust and the Spiders from Mars",
+    "artist": "David Bowie",
+    "year": 1972,
+    "genre": "Glam Rock",
+    "label": "RCA",
+    "color": "#6b2a4a",
+    "cover": "",
+    "blurb": "Bowie's glam-rock concept album about a doomed rock-star alter ego.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Five Years",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Soul Love",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Moonage Daydream",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Starman",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "It Ain't Easy",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Lady Stardust",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Star",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Hang On to Yourself",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Ziggy Stardust",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Suffragette City",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Rock 'n' Roll Suicide",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Songs of a Lost World",
+    "artist": "The Cure",
+    "year": 2024,
+    "genre": "Gothic Rock",
+    "label": "Fiction",
+    "color": "#2a2e33",
+    "cover": "",
+    "blurb": "The Cure's first new album in 16 years, a dark, meditative late-career statement.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Alone",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "And Nothing Is Forever",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "A Fragile Thing",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Warsong",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Drone:Nodrone",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "I Can Never Say Goodbye",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "All I Ever Am",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Endsong",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "Aqualung",
+    "artist": "Jethro Tull",
+    "year": 1971,
+    "genre": "Progressive Rock",
+    "label": "Chrysalis / Reprise",
+    "color": "#5a4632",
+    "cover": "",
+    "blurb": "Jethro Tull's prog landmark; Side 1 themed around the title character, Side 2 ('My God') on organized religion.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Aqualung",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Cross-Eyed Mary",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Cheap Day Return",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Mother Goose",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Wond'ring Aloud",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Up to Me",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "My God",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Hymn 43",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Slipstream",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Locomotive Breath",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Wind Up",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Born to Run",
+    "artist": "Bruce Springsteen",
+    "year": 1975,
+    "genre": "Rock",
+    "label": "Columbia",
+    "color": "#3a3a3a",
+    "cover": "",
+    "blurb": "Springsteen's breakthrough third album, a widescreen vision of escape.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Thunder Road",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Tenth Avenue Freeze-Out",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Night",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Backstreets",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Born to Run",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "She's the One",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Meeting Across the River",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Jungleland",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "Born in the U.S.A.",
+    "artist": "Bruce Springsteen",
+    "year": 1984,
+    "genre": "Rock",
+    "label": "Columbia",
+    "color": "#b5283a",
+    "cover": "",
+    "blurb": "Springsteen's blockbuster seventh album, which spawned seven Top 10 singles.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Born in the U.S.A.",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Cover Me",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Darlington County",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Working on the Highway",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Downbound Train",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "I'm on Fire",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "No Surrender",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Bobby Jean",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "I'm Goin' Down",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Glory Days",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Dancing in the Dark",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "My Hometown",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "The Wild, the Innocent & the E Street Shuffle",
+    "artist": "Bruce Springsteen",
+    "year": 1973,
+    "genre": "Rock",
+    "label": "Columbia",
+    "color": "#4a3a2a",
+    "cover": "",
+    "blurb": "Springsteen's sprawling, jazzy second album of boardwalk characters and street epics.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "The E Street Shuffle",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "4th of July, Asbury Park (Sandy)",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Kitty's Back",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Wild Billy's Circus Story",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Incident on 57th Street",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Rosalita (Come Out Tonight)",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "New York City Serenade",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "The Battle at Garden's Gate",
+    "artist": "Greta Van Fleet",
+    "year": 2021,
+    "genre": "Hard Rock",
+    "label": "Lava / Republic",
+    "color": "#6b5a2f",
+    "cover": "",
+    "blurb": "Greta Van Fleet's grand, classic-rock-styled second album. Double LP.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Heat Above",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "My Way, Soon",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Broken Bells",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Built by Nations",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Age of Machine",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Tears of Rain",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Stardust Chords",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Light My Love",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Caravel",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "The Barbarians",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Trip the Light Fantastic",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "The Weight of Dreams",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Starcatcher",
+    "artist": "Greta Van Fleet",
+    "year": 2023,
+    "genre": "Hard Rock",
+    "label": "Lava / Republic",
+    "color": "#2a3a5a",
+    "cover": "",
+    "blurb": "The band's leaner, more organic third album, produced by Dave Cobb.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Fate of the Faithful",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Waited All Your Life",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "The Falling Sky",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Sacred the Thread",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Runway Blues",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "The Indigo Streak",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Frozen Light",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "The Archer",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Meeting the Master",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Farewell for Now",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "SOUR",
+    "artist": "Olivia Rodrigo",
+    "year": 2021,
+    "genre": "Pop",
+    "label": "Geffen",
+    "color": "#6b3aa0",
+    "cover": "",
+    "blurb": "Rodrigo's blockbuster debut, swinging between pop-punk fury and piano balladry.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "brutal",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "traitor",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "drivers license",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "1 step forward, 3 steps back",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "deja vu",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "good 4 u",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "enough for you",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "happier",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "jealousy, jealousy",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "favorite crime",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "hope ur ok",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Golden Hour",
+    "artist": "Kacey Musgraves",
+    "year": 2018,
+    "genre": "Country",
+    "label": "MCA Nashville",
+    "color": "#c2902f",
+    "cover": "",
+    "blurb": "Musgraves's genre-blurring, Grammy Album of the Year-winning fourth record.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Slow Burn",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Lonely Weekend",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Butterflies",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Oh, What a World",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Mother",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Love Is a Wild Thing",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Space Cowboy",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Happy & Sad",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Velvet Elvis",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Wonder Woman",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "High Horse",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Golden Hour",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Rainbow",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "good kid, m.A.A.d city",
+    "artist": "Kendrick Lamar",
+    "year": 2012,
+    "genre": "Hip-Hop",
+    "label": "Aftermath / TDE",
+    "color": "#5a4632",
+    "cover": "",
+    "blurb": "Kendrick's cinematic major-label debut, a coming-of-age story set in Compton. Vinyl uses the deluxe tracklist.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Sherane a.k.a Master Splinter's Daughter",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "B****, Don't Kill My Vibe",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Backseat Freestyle",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "The Art of Peer Pressure",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Money Trees",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Poetic Justice",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Good Kid",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "m.A.A.d city",
+        "hit": true
+      },
+      {
+        "side": "C",
+        "name": "Swimming Pools (Drank)",
+        "hit": true
+      },
+      {
+        "side": "C",
+        "name": "Sing About Me, I'm Dying of Thirst",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Real",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Compton",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "The Recipe",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Black Boy Fly",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Now or Never",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "To Pimp a Butterfly",
+    "artist": "Kendrick Lamar",
+    "year": 2015,
+    "genre": "Hip-Hop",
+    "label": "Aftermath / TDE",
+    "color": "#2a2a2a",
+    "cover": "",
+    "blurb": "Kendrick's ambitious, jazz- and funk-steeped opus on Black identity in America. Double LP.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Wesley's Theory",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "For Free? (Interlude)",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "King Kunta",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Institutionalized",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "These Walls",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "u",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Alright",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "For Sale? (Interlude)",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Momma",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Hood Politics",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "How Much a Dollar Cost",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Complexion (A Zulu Love)",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "The Blacker the Berry",
+        "hit": true
+      },
+      {
+        "side": "D",
+        "name": "You Ain't Gotta Lie (Momma Said)",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "i",
+        "hit": true
+      },
+      {
+        "side": "D",
+        "name": "Mortal Man",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Rumours",
+    "artist": "Fleetwood Mac",
+    "year": 1977,
+    "genre": "Rock",
+    "label": "Warner Bros.",
+    "color": "#5a3a63",
+    "cover": "",
+    "blurb": "The blockbuster eleventh album, made amid the band's romantic turmoil; one of the best-selling records ever.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Second Hand News",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Dreams",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Never Going Back Again",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Don't Stop",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Go Your Own Way",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Songbird",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "The Chain",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "You Make Loving Fun",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "I Don't Want to Know",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Oh Daddy",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Gold Dust Woman",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "3 + 3",
+    "artist": "The Isley Brothers",
+    "year": 1973,
+    "genre": "Soul",
+    "label": "T-Neck / Epic",
+    "color": "#6b4a2f",
+    "cover": "",
+    "blurb": "The album that expanded the group to six and launched their funk-rock peak, powered by Ernie Isley's guitar.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "That Lady, Pts. 1 & 2",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Don't Let Me Be Lonely Tonight",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "If You Were There",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "You Walk Your Way",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Listen to the Music",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "What It Comes Down To",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Sunshine (Go Away Today)",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Summer Breeze",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "The Highways of My Life",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "The Queen Is Dead",
+    "artist": "The Smiths",
+    "year": 1986,
+    "genre": "Indie Rock",
+    "label": "Rough Trade",
+    "color": "#36544a",
+    "cover": "",
+    "blurb": "The Smiths' acclaimed third album, pairing Morrissey's wit with Johnny Marr's intricate guitar.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "The Queen Is Dead",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Frankly, Mr. Shankly",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "I Know It's Over",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Never Had No One Ever",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Cemetry Gates",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Bigmouth Strikes Again",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "The Boy with the Thorn in His Side",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Vicar in a Tutu",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "There Is a Light That Never Goes Out",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Some Girls Are Bigger Than Others",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Welcome to Sky Valley",
+    "artist": "Kyuss",
+    "year": 1994,
+    "genre": "Stoner Rock",
+    "label": "Elektra",
+    "color": "#b5651f",
+    "cover": "",
+    "blurb": "The desert-rock landmark, conceived as one continuous jam in three movements.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Gardenia",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Asteroid",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Supa Scoopa and Mighty Scoop",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "100°",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Space Cadet",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Demon Cleaner",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Odyssey",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Conan Troutman",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "N.O.",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Whitewater",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Lick Doo",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Ghost in the Machine",
+    "artist": "The Police",
+    "year": 1981,
+    "genre": "New Wave",
+    "label": "A&M",
+    "color": "#b51a1a",
+    "cover": "",
+    "blurb": "The Police's dense, synth- and horn-tinged fourth album.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Spirits in the Material World",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Every Little Thing She Does Is Magic",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Invisible Sun",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Hungry for You (J'aurais Toujours Faim de Toi)",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Demolition Man",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Too Much Information",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Rehumanize Yourself",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "One World (Not Three)",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Omegaman",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Secret Journey",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Darkness",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Greatest Hits",
+    "artist": "Creed",
+    "year": 2004,
+    "genre": "Post-Grunge",
+    "label": "Wind-up / Craft",
+    "color": "#3a4a52",
+    "cover": "",
+    "blurb": "A 13-song hits collection spanning Creed's first three albums. The 2-LP vinyl puts the music on Sides A-C; Side D is a decorative etching.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Torn",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "My Own Prison",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "What's This Life For",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "One",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Are You Ready?",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Higher",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "With Arms Wide Open",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "What If",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "One Last Breath",
+        "hit": true
+      },
+      {
+        "side": "C",
+        "name": "Don't Stop Dancing",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Bullets",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "My Sacrifice",
+        "hit": true
+      },
+      {
+        "side": "C",
+        "name": "Weathered",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Thick as a Brick",
+    "artist": "Jethro Tull",
+    "year": 1972,
+    "genre": "Progressive Rock",
+    "label": "Chrysalis / Reprise",
+    "color": "#7a7460",
+    "cover": "",
+    "blurb": "A prog landmark: one continuous composition, split into Part I (Side A) and Part II (Side B).",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Thick as a Brick, Part I",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Thick as a Brick, Part II",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Escape",
+    "artist": "Journey",
+    "year": 1981,
+    "genre": "Arena Rock",
+    "label": "Columbia",
+    "color": "#2a3a6b",
+    "cover": "",
+    "blurb": "Journey's diamond-selling blockbuster, home to 'Don't Stop Believin'.'",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Don't Stop Believin'",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Stone in Love",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Who's Crying Now",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Keep On Runnin'",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Still They Ride",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Escape",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Lay It Down",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Dead or Alive",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Mother, Father",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Open Arms",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "Trouble Will Find Me",
+    "artist": "The National",
+    "year": 2013,
+    "genre": "Indie Rock",
+    "label": "4AD",
+    "color": "#4a4a55",
+    "cover": "",
+    "blurb": "The National's expansive sixth album, with guests from St. Vincent to Sufjan Stevens. Double LP.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "I Should Live in Salt",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Demons",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Don't Swallow the Cap",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Fireproof",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Sea of Love",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Heavenfaced",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "This Is the Last Time",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "Graceless",
+        "hit": true
+      },
+      {
+        "side": "C",
+        "name": "Slipped",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "I Need My Girl",
+        "hit": true
+      },
+      {
+        "side": "D",
+        "name": "Humiliation",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Pink Rabbits",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "Hard to Find",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Fun House",
+    "artist": "The Stooges",
+    "year": 1970,
+    "genre": "Proto-Punk",
+    "label": "Elektra",
+    "color": "#c43a1a",
+    "cover": "",
+    "blurb": "The Stooges' raw, sax-skronking second album, a proto-punk touchstone.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Down on the Street",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Loose",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "T.V. Eye",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Dirt",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "1970",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Fun House",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "L.A. Blues",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Black Sabbath",
+    "artist": "Black Sabbath",
+    "year": 1970,
+    "genre": "Heavy Metal",
+    "label": "Warner Bros.",
+    "color": "#2a3329",
+    "cover": "",
+    "blurb": "The self-titled debut widely credited with inventing heavy metal. This is the US edition, which replaced the UK's 'Evil Woman' with 'Wicked World' and broke out 'A Bit of Finger' on Side B.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Black Sabbath",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "The Wizard",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Behind the Wall of Sleep",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "N.I.B.",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Wicked World",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "A Bit of Finger",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Sleeping Village",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Warning",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "folklore",
+    "artist": "Taylor Swift",
+    "year": 2020,
+    "genre": "Indie Folk",
+    "label": "Republic",
+    "color": "#6b6357",
+    "cover": "",
+    "blurb": "Swift's hushed, Dessner/Antonoff-produced 2020 album. Double LP including bonus track 'the lakes'; side split is approximate.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "the 1",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "cardigan",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "the last great american dynasty",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "exile",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "my tears ricochet",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "mirrorball",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "seven",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "august",
+        "hit": true
+      },
+      {
+        "side": "C",
+        "name": "this is me trying",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "illicit affairs",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "invisible string",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "mad woman",
+        "hit": false
+      },
+      {
+        "side": "C",
+        "name": "epiphany",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "betty",
+        "hit": true
+      },
+      {
+        "side": "D",
+        "name": "peace",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "hoax",
+        "hit": false
+      },
+      {
+        "side": "D",
+        "name": "the lakes",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Everybody Knows This Is Nowhere",
+    "artist": "Neil Young with Crazy Horse",
+    "year": 1969,
+    "genre": "Rock",
+    "label": "Reprise",
+    "color": "#4a3f2f",
+    "cover": "",
+    "blurb": "Young's first album with Crazy Horse, stretching out on extended electric jams.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Cinnamon Girl",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Everybody Knows This Is Nowhere",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Round & Round (It Won't Be Long)",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Down by the River",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "The Losing End (When You're On)",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Running Dry (Requiem for the Rockets)",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Cowgirl in the Sand",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "title": "Unknown Pleasures",
+    "artist": "Joy Division",
+    "year": 1979,
+    "genre": "Post-Punk",
+    "label": "Factory",
+    "color": "#1a1a1a",
+    "cover": "",
+    "blurb": "Joy Division's stark, atmospheric debut, with its iconic pulsar-wave cover.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Disorder",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Day of the Lords",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Candidate",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Insight",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "New Dawn Fades",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "She's Lost Control",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Shadowplay",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Wilderness",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Interzone",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "I Remember Nothing",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Kill Bill Vol. 1 (Original Soundtrack)",
+    "artist": "Various Artists",
+    "year": 2003,
+    "genre": "Soundtrack",
+    "label": "Maverick",
+    "color": "#d4a017",
+    "cover": "",
+    "blurb": "Tarantino's genre-hopping soundtrack, curated with RZA - surf, soul, spaghetti-western and dialogue clips.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Bang Bang (My Baby Shot Me Down) - Nancy Sinatra",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "That Certain Female - Charlie Feathers",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "The Grand Duel (Parte Prima) - Luis Bacalov",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Twisted Nerve - Bernard Herrmann",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Queen of the Crime Council - Lucy Liu & Julie Dreyfus",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Ode to Oren Ishii - The RZA",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Run Fay Run - Isaac Hayes",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Green Hornet - Al Hirt",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Battle Without Honor or Humanity - Tomoyasu Hotei",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Don't Let Me Be Misunderstood / Esmeralda Suite - Santa Esmeralda",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Woo Hoo - The 5.6.7.8's",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Crane / White Lightning - The RZA / Charles Bernstein",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "The Flower of Carnage - Meiko Kaji",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "The Lonely Shepherd - Zamfir",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "You're My Wicked Life - dialogue",
+        "hit": false
+      }
+    ]
+  },
+  {
+    "title": "Gratest Hits",
+    "artist": "Grateful Dead",
+    "year": 2025,
+    "genre": "Rock",
+    "label": "Rhino",
+    "color": "#c2391f",
+    "cover": "",
+    "blurb": "The Dead's first-ever official greatest-hits LP, released for their 60th anniversary.",
+    "tracks": [
+      {
+        "side": "A",
+        "name": "Casey Jones",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Friend of the Devil",
+        "hit": true
+      },
+      {
+        "side": "A",
+        "name": "Box of Rain",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Sugar Magnolia",
+        "hit": false
+      },
+      {
+        "side": "A",
+        "name": "Truckin'",
+        "hit": true
+      },
+      {
+        "side": "B",
+        "name": "Scarlet Begonias",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Fire on the Mountain",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Estimated Prophet",
+        "hit": false
+      },
+      {
+        "side": "B",
+        "name": "Touch of Grey",
+        "hit": true
+      }
+    ]
+  }
+];
+
+/* ============================================================================
+   ============================  APP CODE  ====================================
+   You don't need to edit anything below this line.
+   ============================================================================ */
+(function(){
+  const grid = document.getElementById('grid');
+  const chipsEl = document.getElementById('chips');
+  const searchEl = document.getElementById('search');
+  const sortEl = document.getElementById('sort');
+  const overlay = document.getElementById('overlay');
+  const modal = document.getElementById('modal');
+  const countBadge = document.getElementById('countBadge');
+
+  // give each album its original index (for "recently added" = last entered)
+  ALBUMS.forEach((a,i)=>a._i=i);
+
+  let activeGenre = 'All';
+  let query = '';
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  const genres = ['All', ...Array.from(new Set(ALBUMS.map(a=>a.genre).filter(Boolean))).sort()];
+
+  function renderChips(){
+    chipsEl.innerHTML = genres.map(g =>
+      `<button class="chip${g===activeGenre?' active':''}" data-g="${esc(g)}">${esc(g)}</button>`
+    ).join('');
+    chipsEl.querySelectorAll('.chip').forEach(c=>{
+      c.onclick=()=>{activeGenre=c.dataset.g;renderChips();render();};
+    });
+  }
+
+  function sleeveInner(a, big){
+    const ph = `<div class="placeholder" style="background:${esc(a.color)}">
+        <div class="pt">${esc(a.title)}</div>
+        <div class="pa">${esc(a.artist)}</div>
+      </div>`;
+    let img = '';
+    if(a.cover && a.cover.trim()){
+      // image sits on top of the placeholder; if it fails to load we hide it
+      img = `<img src="${esc(a.cover)}" alt="${esc(a.title)} cover" loading="lazy"
+              onerror="this.style.display='none'">`;
+    }
+    return ph + img;
+  }
+
+  function matches(a){
+    if(activeGenre!=='All' && a.genre!==activeGenre) return false;
+    if(!query) return true;
+    const q = query.toLowerCase();
+    if(a.title.toLowerCase().includes(q)) return true;
+    if(a.artist.toLowerCase().includes(q)) return true;
+    if((a.label||'').toLowerCase().includes(q)) return true;
+    if(String(a.year).includes(q)) return true;
+    return a.tracks.some(t=>t.name.toLowerCase().includes(q));
+  }
+
+  function sortList(list){
+    const v = sortEl.value;
+    const by = {
+      'artist': (a,b)=> a.artist.localeCompare(b.artist) || a.year-b.year,
+      'title':  (a,b)=> a.title.localeCompare(b.title),
+      'year-new':(a,b)=> (b.year||0)-(a.year||0),
+      'year-old':(a,b)=> (a.year||0)-(b.year||0),
+      'added':  (a,b)=> b._i-a._i,
+    }[v];
+    return list.slice().sort(by);
+  }
+
+  function render(){
+    let list = ALBUMS.filter(matches);
+    list = sortList(list);
+    countBadge.textContent = list.length + (list.length===1?' record':' records');
+    if(!list.length){ grid.innerHTML = `<div class="empty">No records match that search.</div>`; return; }
+    grid.innerHTML = list.map((a,i)=>`
+      <div class="card" data-i="${a._i}" style="animation-delay:${Math.min(i*22,400)}ms">
+        <div class="sleeve">${sleeveInner(a)}</div>
+        <div class="card-meta">
+          <div class="card-title">${esc(a.title)}</div>
+          <div class="card-artist">${esc(a.artist)}</div>
+          <div class="card-tags">${esc(a.year)} · ${esc(a.genre)}</div>
+        </div>
+      </div>`).join('');
+    grid.querySelectorAll('.card').forEach(c=>{
+      c.onclick=()=>openModal(ALBUMS.find(x=>x._i==c.dataset.i));
+    });
+  }
+
+  function openModal(a){
+    const sides = [...new Set(a.tracks.map(t=>t.side))];
+    let body = '';
+    sides.forEach(side=>{
+      const rows = a.tracks.filter(t=>t.side===side).map((t,idx)=>`
+        <div class="trk${t.hit?' hit':''}">
+          <span class="n">${idx+1}</span>
+          <span class="t">${esc(t.name)}</span>
+          ${t.hit?'<span class="star">★</span>':''}
+        </div>`).join('');
+      body += `<div class="side-block"><div class="side-label">Side ${esc(side)}</div>${rows}</div>`;
+    });
+    const meta = [a.year, a.genre, a.label].filter(Boolean).map(esc).join(' &nbsp;·&nbsp; ');
+    modal.innerHTML = `
+      <div class="modal-top">
+        <button class="close" aria-label="Close">×</button>
+        <div class="modal-sleeve">${sleeveInner(a,true)}</div>
+        <div class="modal-info">
+          <h2>${esc(a.title)}</h2>
+          <div class="ma">${esc(a.artist)}</div>
+          <div class="meta">${meta}</div>
+          ${a.blurb?`<div class="blurb">${esc(a.blurb)}</div>`:''}
+        </div>
+      </div>
+      <div class="tracks">${body}</div>
+      <div class="legend"><span class="star">★</span> = hit / signature song</div>`;
+    modal.querySelector('.close').onclick=closeModal;
+    overlay.classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  function closeModal(){overlay.classList.remove('open');document.body.style.overflow='';}
+  overlay.onclick=e=>{if(e.target===overlay)closeModal();};
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+  searchEl.oninput=e=>{query=e.target.value.trim();render();};
+  sortEl.onchange=render;
+
+  renderChips();
+  render();
+})();
+</script>
+</body>
+</html>
