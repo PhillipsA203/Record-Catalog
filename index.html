@@ -3926,12 +3926,25 @@ const ALBUMS = [
         <div class="pt">${esc(a.title)}</div>
         <div class="pa">${esc(a.artist)}</div>
       </div>`;
-    let img = '';
-    if(a.cover && a.cover.trim()){
-      // image sits on top of the placeholder; if it fails to load we hide it
-      img = `<img src="${esc(a.cover)}" alt="${esc(a.title)} cover" loading="lazy"
-              onerror="this.style.display='none'">`;
+    // If you filled in "cover", we use that. Otherwise the site automatically
+    // looks for covers/<album-name> using the filename from your checklist,
+    // trying .jpg, .png, .jpeg, then .webp. No image found = colored sleeve stays.
+    function slugify(s){
+      return String(s).toLowerCase()
+        .replace(/&/g,' and ').replace(/\+/g,' plus ')
+        .replace(/[^a-z0-9\s-]/g,'').trim()
+        .replace(/\s+/g,'-').replace(/-+/g,'-');
     }
+    let cands;
+    if(a.cover && a.cover.trim()){
+      cands = [a.cover.trim()];
+    } else {
+      const base = 'covers/' + slugify(a.title);
+      cands = [base+'.jpg', base+'.png', base+'.jpeg', base+'.webp'];
+    }
+    const img = `<img src="${esc(cands[0])}" alt="${esc(a.title)} cover" loading="lazy"
+        data-cands='${JSON.stringify(cands.slice(1))}'
+        onerror="var c=JSON.parse(this.dataset.cands||'[]'); if(c.length){this.src=c.shift(); this.dataset.cands=JSON.stringify(c);} else {this.onerror=null; this.style.display='none';}">`;
     return ph + img;
   }
 
